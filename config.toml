@@ -1,0 +1,13 @@
+[image]
+start_sample = "start_sample.jpg"
+end_sample = "end_sample.jpg"
+
+[coord]
+"1start_sample.jpg" = [ 1317, 71,]
+"1start_sample.jpg_col" = [ 250, 255, 0,]
+"2start_sample.jpg" = [ 1565, 56,]
+"2start_sample.jpg_col" = [ 252, 254, 3,]
+"1end_sample.jpg" = [ 1166, 86,]
+"1end_sample.jpg_col" = [ 231, 255, 6,]
+"2end_sample.jpg" = [ 1148, 340,]
+"2end_sample.jpg_col" = [ 113, 255, 1,]
