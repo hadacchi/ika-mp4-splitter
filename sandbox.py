@@ -34,14 +34,15 @@ def frame_check(frame, coord, base_color):
 
 
 config = 'config.toml'
-video = '/mnt/e/編集中Videos/ika/IOHD0417.MP4'
+conf = toml.load(open(config))
+
+video = conf['target']['filename']
 video_dos = dos_path(video)
 
 jsonfile = f'{video}.json'
 keyframefile = f'{video}_keyframes.txt'
 rangefile = f'{video}_ranges.txt'
 
-conf = toml.load(open(config))
 
 ffprobe = conf['win']['ffprobe']
 avidemux = conf['win']['avidemux']

@@ -1,3 +1,6 @@
+[target]
+filename = '/mnt/c/Users/username/Videos/video_file.mp4'
+
 [image]
 start_sample = "start_sample.jpg"
 end_sample = "end_sample.jpg"
