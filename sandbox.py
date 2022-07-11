@@ -53,6 +53,7 @@ esample = conf['image']['end_sample']
 if not os.path.isfile(keyframefile):
 
     if not os.path.isfile(jsonfile):
+        print('creating keyframe file...')
         subprocess.run(
             f'{ffprobe} -show_frames -select_streams v -print_format json {video_dos} > {jsonfile}',
             shell=True,
@@ -121,6 +122,7 @@ if not os.path.isfile(keyframefile):
 
     judges = []
 
+    print('searching all keyframes for start/end points...')
     for fr_info in key_frames:
         frame = pick_frame(video, fr_info['coded_picture_number'])
         fr_num = fr_info['coded_picture_number']
@@ -145,6 +147,7 @@ if not os.path.isfile(rangefile):
     mode = ''
     ranges = []
 
+    print('indicate start/end point for each game...')
     for l in judges:
         if mode == '' and l[0] == 's':
             ranges.append([l[1:], ])
@@ -173,6 +176,8 @@ else:
 
 script_path = mk_avidemuxpy.mk_avidemuxpy(video, video_dos, ranges)
 script_dos = dos_path(script_path)
+
+print('trimming...')
 
 proc = subprocess.run(f'"{avidemux}" --run "{script_dos}"',
     shell = True,
