@@ -20,7 +20,7 @@ def pick_frame(video_path, frame_num):
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise Exception('Error')
-    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
+    cap.set(cv2.CAP_PROP_POS_FRAMES, int(frame_num))
 
     ret, frame = cap.read()
 
@@ -40,6 +40,7 @@ video = conf['target']['filename']
 video_dos = dos_path(video)
 
 jsonfile = f'{video}.json'
+csvfile = f'{video}.csv'
 keyframefile = f'{video}_keyframes.txt'
 rangefile = f'{video}_ranges.txt'
 
@@ -52,19 +53,24 @@ esample = conf['image']['end_sample']
 
 if not os.path.isfile(keyframefile):
 
-    if not os.path.isfile(jsonfile):
+    #if not os.path.isfile(jsonfile):
+    if not os.path.isfile(csvfile):
         print('creating keyframe file...')
         subprocess.run(
-            f'{ffprobe} -show_frames -select_streams v -print_format json {video_dos} > {jsonfile}',
+            f'{ffprobe} -show_frames -select_streams v:0 -show_entries frame=key_frame,pkt_pts_time,coded_picture_number -of csv=p=0 {video_dos} |grep "^1" > {csvfile}',
+            #f'{ffprobe} -show_frames -select_streams v:0 -show_entries frame=key_frame,pkt_pts_time,coded_picture_number -print_format json {video_dos} > {jsonfile}',
             shell=True,
             text=True
             )
 
-    with open(jsonfile) as f:
-        buf = json.load(f)['frames']
+    with open(csvfile) as f:
+        cobj = csv.reader(f)
+        key_frames = list(cobj)
+        #buf = json.load(f)['frames']
 
-    key_frames = [f for f in buf if f['key_frame'] == 1]
-    print(f'the num of all frames is {len(buf)}, there are {len(key_frames)} key frames')
+    #key_frames = [f for f in buf if f['key_frame'] == 1]
+    #print(f'the num of all frames is {len(buf)}, there are {len(key_frames)} key frames')
+    print(f'there are {len(key_frames)} key frames')
 
 
     # 座標指定がない場合
@@ -84,7 +90,7 @@ if not os.path.isfile(keyframefile):
         cv2.imwrite('{ssample}', frame)   # write picture
         ''')
             print('list of keyframes are')
-            print([f['coded_picture_number'] for f in key_frames])
+            print([c[2] for c in key_frames])
             raise Exception(f'no {ssample}')
 
         if not os.path.isfile(esample):
@@ -101,7 +107,7 @@ if not os.path.isfile(keyframefile):
         cv2.imwrite({esample}, frame)   # write picture
         ''')
             print('list of keyframes are')
-            print([f['coded_picture_number'] for f in key_frames])
+            print([c[2] for c in key_frames])
             raise Exception(f'no {esample}')
 
         print('get two coordinates of start_sample and end_sample')
@@ -123,19 +129,19 @@ if not os.path.isfile(keyframefile):
     judges = []
 
     print('searching all keyframes for start/end points...')
-    for fr_info in key_frames:
-        frame = pick_frame(video, fr_info['coded_picture_number'])
-        fr_num = fr_info['coded_picture_number']
+    for c in key_frames:
+        frame = pick_frame(video, c[2])
+        #fr_num = fr_info['coded_picture_number']
         #cv2.imwrite(f'{fr_num}.jpg', frame)
 
         if frame_check(frame, scoord1, scolor1) < threshold and \
                 frame_check(frame, scoord2, scolor2) < threshold:
             #judges.append('s{0}'.format(fr_info['coded_picture_number']))
-            judges.append('s{0}'.format(fr_info['pkt_pts_time']))
+            judges.append('s{0}'.format(c[1]))
         elif frame_check(frame, ecoord1, ecolor1) < threshold and \
                 frame_check(frame, ecoord2, ecolor2) < threshold:
             #judges.append('e{0}'.format(fr_info['coded_picture_number']))
-            judges.append('e{0}'.format(fr_info['pkt_pts_time']))
+            judges.append('e{0}'.format(c[1]))
 
     with open(keyframefile, 'w') as f:
         for j in judges:
