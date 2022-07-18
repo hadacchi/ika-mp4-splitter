@@ -1,5 +1,5 @@
 [target]
-filename = '/mnt/c/Users/username/Videos/video_file.mp4'
+filename = ["/mnt/c/Users/username/Videos/video_file1.mp4", "/mnt/c/Users/username/Videos/video_file2.mp4"]
 
 [image]
 start_sample = "start_sample.jpg"

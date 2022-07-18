@@ -36,156 +36,150 @@ def frame_check(frame, coord, base_color):
 config = 'config.toml'
 conf = toml.load(open(config))
 
-video = conf['target']['filename']
-video_dos = dos_path(video)
+videos = conf['target']['filename']
 
-jsonfile = f'{video}.json'
-csvfile = f'{video}.csv'
-keyframefile = f'{video}_keyframes.txt'
-rangefile = f'{video}_ranges.txt'
+for video in videos:
+    video_dos = dos_path(video)
 
-
-ffprobe = conf['win']['ffprobe']
-avidemux = conf['win']['avidemux']
-
-ssample = conf['image']['start_sample']
-esample = conf['image']['end_sample']
-
-if not os.path.isfile(keyframefile):
-
-    #if not os.path.isfile(jsonfile):
-    if not os.path.isfile(csvfile):
-        print('creating keyframe file...')
-        subprocess.run(
-            f'{ffprobe} -show_frames -select_streams v:0 -show_entries frame=key_frame,pkt_pts_time,coded_picture_number -of csv=p=0 {video_dos} |grep "^1" > {csvfile}',
-            #f'{ffprobe} -show_frames -select_streams v:0 -show_entries frame=key_frame,pkt_pts_time,coded_picture_number -print_format json {video_dos} > {jsonfile}',
-            shell=True,
-            text=True
-            )
-
-    with open(csvfile) as f:
-        cobj = csv.reader(f)
-        key_frames = list(cobj)
-        #buf = json.load(f)['frames']
-
-    #key_frames = [f for f in buf if f['key_frame'] == 1]
-    #print(f'the num of all frames is {len(buf)}, there are {len(key_frames)} key frames')
-    print(f'there are {len(key_frames)} key frames')
+    jsonfile = f'{video}.json'
+    csvfile = f'{video}.csv'
+    keyframefile = f'{video}_keyframes.txt'
+    rangefile = f'{video}_ranges.txt'
 
 
-    # 座標指定がない場合
-    if 'coord' not in conf:
-        # サンプル画像がなかったら切り出しをするよう指示
-        if not os.path.isfile(ssample):
-            print(f'please store picture when game starts by name `{ssample}\'')
-            print(f'''import cv2
-        def showpic(video_path, frame_num):
-            cap = cv2.VideoCapture(video_path)
-            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
-            ret, frame = cap.read()
-            cv2.imshow('img', frame)          # preview picture
-            cv2.waitKey()
-            return frame
+    ffprobe = conf['win']['ffprobe']
+    avidemux = conf['win']['avidemux']
 
-        cv2.imwrite('{ssample}', frame)   # write picture
-        ''')
-            print('list of keyframes are')
-            print([c[2] for c in key_frames])
-            raise Exception(f'no {ssample}')
+    ssample = conf['image']['start_sample']
+    esample = conf['image']['end_sample']
 
-        if not os.path.isfile(esample):
-            print(f'please store picture when game ends by name `{esample}\'')
-            print(f'''import cv2
-        def showpic(video_path, frame_num):
-            cap = cv2.VideoCapture(video_path)
-            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
-            ret, frame = cap.read()
-            cv2.imshow('img', frame)          # preview picture
-            cv2.waitKey()
-            return frame
+    if not os.path.isfile(keyframefile):
 
-        cv2.imwrite({esample}, frame)   # write picture
-        ''')
-            print('list of keyframes are')
-            print([c[2] for c in key_frames])
-            raise Exception(f'no {esample}')
+        #if not os.path.isfile(jsonfile):
+        if not os.path.isfile(csvfile):
+            print('creating keyframe file...')
+            subprocess.run(
+                f'{ffprobe} -show_frames -select_streams v:0 -show_entries frame=key_frame,pkt_pts_time,coded_picture_number -of csv=p=0 {video_dos} |grep "^1" > {csvfile}',
+                #f'{ffprobe} -show_frames -select_streams v:0 -show_entries frame=key_frame,pkt_pts_time,coded_picture_number -print_format json {video_dos} > {jsonfile}',
+                shell=True,
+                text=True
+                )
 
-        print('get two coordinates of start_sample and end_sample')
-        print('do `python get_coordinate.py`')
-        raise Exception(f'no coordinate')
+        with open(csvfile) as f:
+            cobj = csv.reader(f)
+            key_frames = list(cobj)
+            #buf = json.load(f)['frames']
 
-    threshold = 10
+        print(f'there are {len(key_frames)} key frames')
 
-    scoord1 = conf['coord'][f'1{ssample}']
-    scolor1 = np.array(conf['coord'][f'1{ssample}_col'])
-    scoord2 = conf['coord'][f'2{ssample}']
-    scolor2 = np.array(conf['coord'][f'2{ssample}_col'])
 
-    ecoord1 = conf['coord'][f'1{esample}']
-    ecolor1 = np.array(conf['coord'][f'1{esample}_col'])
-    ecoord2 = conf['coord'][f'2{esample}']
-    ecolor2 = np.array(conf['coord'][f'2{esample}_col'])
+        # 座標指定がない場合
+        if 'coord' not in conf:
+            # サンプル画像がなかったら切り出しをするよう指示
+            if not os.path.isfile(ssample):
+                print(f'please store picture when game starts by name `{ssample}\'')
+                print(f'''import cv2
+            def showpic(video_path, frame_num):
+                cap = cv2.VideoCapture(video_path)
+                cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
+                ret, frame = cap.read()
+                cv2.imshow('img', frame)          # preview picture
+                cv2.waitKey()
+                return frame
 
-    judges = []
+            cv2.imwrite('{ssample}', frame)   # write picture
+            ''')
+                print('list of keyframes are')
+                print([c[2] for c in key_frames])
+                raise Exception(f'no {ssample}')
 
-    print('searching all keyframes for start/end points...')
-    for c in key_frames:
-        frame = pick_frame(video, c[2])
-        #fr_num = fr_info['coded_picture_number']
-        #cv2.imwrite(f'{fr_num}.jpg', frame)
+            if not os.path.isfile(esample):
+                print(f'please store picture when game ends by name `{esample}\'')
+                print(f'''import cv2
+            def showpic(video_path, frame_num):
+                cap = cv2.VideoCapture(video_path)
+                cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num)
+                ret, frame = cap.read()
+                cv2.imshow('img', frame)          # preview picture
+                cv2.waitKey()
+                return frame
 
-        if frame_check(frame, scoord1, scolor1) < threshold and \
-                frame_check(frame, scoord2, scolor2) < threshold:
-            #judges.append('s{0}'.format(fr_info['coded_picture_number']))
-            judges.append('s{0}'.format(c[1]))
-        elif frame_check(frame, ecoord1, ecolor1) < threshold and \
-                frame_check(frame, ecoord2, ecolor2) < threshold:
-            #judges.append('e{0}'.format(fr_info['coded_picture_number']))
-            judges.append('e{0}'.format(c[1]))
+            cv2.imwrite({esample}, frame)   # write picture
+            ''')
+                print('list of keyframes are')
+                print([c[2] for c in key_frames])
+                raise Exception(f'no {esample}')
 
-    with open(keyframefile, 'w') as f:
-        for j in judges:
-            f.write(j+'\n')
-else:
-    judges = open(keyframefile, 'r').read().rstrip().splitlines()
+            print('get two coordinates of start_sample and end_sample')
+            print('do `python get_coordinate.py`')
+            raise Exception(f'no coordinate')
 
-if not os.path.isfile(rangefile):
-    mode = ''
-    ranges = []
+        threshold = 10
 
-    print('indicate start/end point for each game...')
-    for l in judges:
-        if mode == '' and l[0] == 's':
-            ranges.append([l[1:], ])
-            mode = 's'
-        if mode == 's' and l[0] == 'e':
-            mode = 'e'
-            prev = l[1:]
-        if mode == 'e':
-            if l[0] == 's':
-                ranges[-1].append(prev)
+        scoord1 = conf['coord'][f'1{ssample}']
+        scolor1 = np.array(conf['coord'][f'1{ssample}_col'])
+        scoord2 = conf['coord'][f'2{ssample}']
+        scolor2 = np.array(conf['coord'][f'2{ssample}_col'])
+
+        ecoord1 = conf['coord'][f'1{esample}']
+        ecolor1 = np.array(conf['coord'][f'1{esample}_col'])
+        ecoord2 = conf['coord'][f'2{esample}']
+        ecolor2 = np.array(conf['coord'][f'2{esample}_col'])
+
+        judges = []
+
+        print('searching all keyframes for start/end points...')
+        for c in key_frames:
+            frame = pick_frame(video, c[2])
+
+            if frame_check(frame, scoord1, scolor1) < threshold and \
+                    frame_check(frame, scoord2, scolor2) < threshold:
+                judges.append('s{0}'.format(c[1]))
+            elif frame_check(frame, ecoord1, ecolor1) < threshold and \
+                    frame_check(frame, ecoord2, ecolor2) < threshold:
+                judges.append('e{0}'.format(c[1]))
+
+        with open(keyframefile, 'w') as f:
+            for j in judges:
+                f.write(j+'\n')
+    else:
+        judges = open(keyframefile, 'r').read().rstrip().splitlines()
+
+    if not os.path.isfile(rangefile):
+        mode = ''
+        ranges = []
+
+        print('indicate start/end point for each game...')
+        for l in judges:
+            if mode == '' and l[0] == 's':
                 ranges.append([l[1:], ])
                 mode = 's'
-            else:
+            if mode == 's' and l[0] == 'e':
+                mode = 'e'
                 prev = l[1:]
-    ranges[-1].append(prev)
+            if mode == 'e':
+                if l[0] == 's':
+                    ranges[-1].append(prev)
+                    ranges.append([l[1:], ])
+                    mode = 's'
+                else:
+                    prev = l[1:]
+        ranges[-1].append(prev)
 
-    with open(rangefile, 'w') as f:
-        cobj = csv.writer(f)
-        cobj.writerows(ranges)
-        #for r in ranges:
-        #    f.write(r+'\n')
-else:
-    ranges = list(csv.reader(open(rangefile)))
-    print(ranges)
+        with open(rangefile, 'w') as f:
+            cobj = csv.writer(f)
+            cobj.writerows(ranges)
+    else:
+        ranges = list(csv.reader(open(rangefile)))
+        print(ranges)
 
 
-script_path = mk_avidemuxpy.mk_avidemuxpy(video, video_dos, ranges)
-script_dos = dos_path(script_path)
+    script_path = mk_avidemuxpy.mk_avidemuxpy(video, video_dos, ranges)
+    script_dos = dos_path(script_path)
 
-print('trimming...')
+    print('trimming...')
 
-proc = subprocess.run(f'"{avidemux}" --run "{script_dos}"',
-    shell = True,
-    text = True
-)
+    proc = subprocess.run(f'"{avidemux}" --run "{script_dos}"',
+        shell = True,
+        text = True
+    )
