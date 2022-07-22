@@ -8,6 +8,7 @@ import cv2
 import os
 import subprocess
 import toml
+import tqdm
 import numpy as np
 
 import mk_avidemuxpy
@@ -129,7 +130,7 @@ for video in videos:
         judges = []
 
         print('searching all keyframes for start/end points...')
-        for c in key_frames:
+        for c in tqdm.tqdm(key_frames):
             frame = pick_frame(video, c[2])
 
             if frame_check(frame, scoord1, scolor1) < threshold and \
